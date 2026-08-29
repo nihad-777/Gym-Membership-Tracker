@@ -159,5 +159,22 @@ router.post('/:id/checkin', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// GET Members expiring within N days (Default: 3 days)
+router.get('/alerts/expiring', async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 3;
+    const now = new Date();
+    const threshold = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+    const expiringMembers = await Member.find({
+      endDate: { $gte: now, $lte: threshold },
+      status: 'Active',
+    }).select('name phone planType endDate amountPaid');
+
+    res.json(expiringMembers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;
